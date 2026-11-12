@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>數學數系大挑戰：複數接蘋果</title>
+  <title>數學數系極限大挑戰：陽光果園接蘋果</title>
   <style>
     :root {
       --bg-color: #0f172a;
@@ -29,13 +29,13 @@
       align-items: center;
       justify-content: flex-start;
       height: 100vh;
-      overflow: hidden; /* 防止 iPad 滑動時畫面上下晃動 */
-      touch-action: none; /* 鎖定觸控預設行為，讓左右滑動極致順暢 */
+      overflow: hidden;
+      touch-action: none;
       padding: 6px;
     }
     header {
       width: 100%;
-      max-width: 700px;
+      max-width: 720px;
       padding: 10px 16px;
       display: flex;
       justify-content: space-between;
@@ -48,13 +48,13 @@
     h1 { font-size: 1.15rem; color: #fb7185; display: flex; align-items: center; gap: 6px; }
     .status-bar {
       display: flex;
-      gap: 16px;
-      font-size: 0.95rem;
+      gap: 14px;
+      font-size: 0.9rem;
       font-weight: bold;
     }
     .target-banner {
       width: 100%;
-      max-width: 700px;
+      max-width: 720px;
       background: #020617;
       padding: 8px 12px;
       text-align: center;
@@ -66,11 +66,12 @@
       font-size: 1.25rem;
       font-weight: bold;
       color: #38bdf8;
+      transition: color 0.3s;
     }
     .game-container {
       position: relative;
       width: 100%;
-      max-width: 700px;
+      max-width: 720px;
       flex-grow: 1;
       max-height: calc(100vh - 110px);
       aspect-ratio: 4 / 3;
@@ -79,7 +80,6 @@
       align-items: center;
     }
     canvas {
-      background: linear-gradient(180deg, #0f172a 0%, #1e293b 85%, #14532d 85%, #166534 100%);
       border: 2px solid #334155;
       border-radius: 0 0 12px 12px;
       width: 100%;
@@ -92,7 +92,8 @@
     .modal {
       position: absolute;
       inset: 0;
-      background: rgba(15, 23, 42, 0.95);
+      background: rgba(15, 23, 42, 0.92);
+      backdrop-filter: blur(4px);
       border-radius: 0 0 12px 12px;
       display: flex;
       flex-direction: column;
@@ -103,8 +104,13 @@
     }
     .modal-content {
       width: 100%;
-      max-width: 420px;
+      max-width: 440px;
       text-align: center;
+      background: #1e293b;
+      padding: 24px;
+      border-radius: 16px;
+      border: 1px solid #475569;
+      box-shadow: 0 12px 32px rgba(0,0,0,0.5);
     }
     .form-group {
       margin-bottom: 14px;
@@ -127,16 +133,17 @@
       outline: none;
     }
     button.primary-btn {
-      background: var(--accent);
+      background: linear-gradient(180deg, #fb7185 0%, #e11d48 100%);
       color: #ffffff;
       font-weight: bold;
       border: none;
       cursor: pointer;
       margin-top: 10px;
       font-size: 1.05rem;
-      transition: background 0.2s;
+      box-shadow: 0 4px 12px rgba(225, 29, 72, 0.4);
+      transition: transform 0.1s;
     }
-    button.primary-btn:hover { background: var(--accent-hover); }
+    button.primary-btn:active { transform: scale(0.98); }
     .stats-table {
       width: 100%;
       margin: 14px 0;
@@ -146,102 +153,131 @@
     .stats-table td { padding: 6px; text-align: left; border-bottom: 1px solid #334155; }
     .stats-table td:last-child { text-align: right; font-weight: bold; color: #facc15; }
     
-    /* 錯誤凍結提示浮層 */
+    /* 錯誤凍結 5 秒提示浮層 */
     .freeze-banner {
       position: absolute;
-      top: 32%;
+      top: 38%;
       left: 50%;
       transform: translate(-50%, -50%);
-      background: rgba(220, 38, 38, 0.95);
-      border: 3px solid #fca5a5;
+      background: linear-gradient(135deg, rgba(30, 58, 138, 0.96), rgba(15, 23, 42, 0.96));
+      border: 3px solid #38bdf8;
       color: #fff;
-      padding: 16px 22px;
-      border-radius: 12px;
+      padding: 18px 24px;
+      border-radius: 16px;
       text-align: center;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.7);
+      box-shadow: 0 15px 35px rgba(0,0,0,0.75);
       z-index: 15;
       display: none;
-      width: 85%;
-      max-width: 480px;
+      width: 88%;
+      max-width: 500px;
       pointer-events: none;
     }
-    .freeze-banner h3 { font-size: 1.25rem; margin-bottom: 6px; color: #fef08a; }
-    .freeze-banner p { font-size: 1rem; line-height: 1.4; }
+    .freeze-banner h3 { font-size: 1.25rem; margin-bottom: 8px; color: #7dd3fc; }
+    .freeze-banner p { font-size: 1.05rem; line-height: 1.5; }
+    .pause-badge {
+      display: inline-block;
+      margin-top: 8px;
+      padding: 4px 12px;
+      background: rgba(250, 204, 21, 0.2);
+      border: 1px solid #facc15;
+      border-radius: 999px;
+      color: #fde047;
+      font-size: 0.85rem;
+      font-weight: bold;
+    }
+
+    /* 關卡轉場大標語 */
+    .stage-transition {
+      position: absolute;
+      top: 28%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: linear-gradient(135deg, #0284c7, #1e3a8a);
+      border: 3px solid #bae6fd;
+      color: #fff;
+      padding: 16px 30px;
+      border-radius: 16px;
+      font-size: 1.4rem;
+      font-weight: bold;
+      text-align: center;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.7);
+      z-index: 16;
+      display: none;
+      pointer-events: none;
+    }
   </style>
 </head>
 <body>
 
   <header>
-    <h1>🍎 複數與數系：接蘋果挑戰</h1>
+    <h1>🍎 數系果園：連闖四關挑戰</h1>
     <div class="status-bar">
+      <span>關卡: <span id="stageBadge" style="color:#fb7185;">1/4</span></span>
       <span>得分: <span id="scoreVal" style="color:#38bdf8;">0</span></span>
-      <span>接對: <span id="correctVal" style="color:#4ade80;">0</span></span>
-      <span>剩餘時間: <span id="timeVal" style="color:#facc15;">30s</span></span>
+      <span>本關時間: <span id="stageTimeVal" style="color:#4ade80;">30s</span></span>
+      <span>總時間: <span id="totalTimeVal" style="color:#facc15;">120s</span></span>
     </div>
   </header>
 
   <div class="target-banner">
-    <div class="target-title" id="missionText">請選擇關卡開始遊戲</div>
-    <div style="font-size: 0.8rem; color: #94a3b8; margin-top: 2px;">📱 在畫面左右滑動手指（或用方向鍵）控制人物移動</div>
+    <div class="target-title" id="missionText">準備開始挑戰...</div>
+    <div style="font-size: 0.8rem; color: #94a3b8; margin-top: 2px;">📱 在畫面左右滑動手指（或鍵盤方向鍵）控制人物移動</div>
   </div>
 
   <div class="game-container">
     <canvas id="gameCanvas" width="800" height="600"></canvas>
 
-    <!-- 接錯凍結 2 秒提示框 -->
+    <!-- 關卡切換提示 -->
+    <div class="stage-transition" id="stageTransition">🚀 進入新關卡！</div>
+
+    <!-- 接錯凍結 5 秒提示框 -->
     <div class="freeze-banner" id="freezeBanner">
-      <h3 id="freezeTitle">❄️ 接錯了！凍結移動 2 秒！</h3>
+      <h3 id="freezeTitle">❄️ 接錯了！冰凍學習 5.0 秒</h3>
       <p id="freezeDesc"></p>
+      <div class="pause-badge">⏸️ 遊戲計時已暫停，請仔細閱讀上方觀念！</div>
     </div>
 
     <!-- 開始選單 -->
     <div class="modal" id="startModal">
       <div class="modal-content">
-        <h2 style="margin-bottom:14px; color:#fb7185; font-size:1.4rem;">🍎 選擇數系挑戰關卡</h2>
-        
-        <div class="form-group">
-          <label>1. 選擇目標關卡（每關 30 秒）</label>
-          <select id="stageSelect">
-            <option value="rational">關卡一：有理數 (Rational Numbers)</option>
-            <option value="irrational">關卡二：無理數 (Irrational Numbers)</option>
-            <option value="real">關卡三：實數 (Real Numbers)</option>
-            <option value="imaginary">關卡四：虛數 (Imaginary Numbers)</option>
-          </select>
-        </div>
+        <h2 style="margin-bottom:10px; color:#fb7185; font-size:1.45rem;">🌳 陽光果園：數系連闖四關</h2>
+        <p style="font-size:0.9rem; color:#cbd5e1; margin-bottom:14px; line-height:1.5;">
+          每關 30 秒，共計 2 分鐘挑戰！<br>
+          <b>第1關：有理數 ➔ 第2關：無理數 ➔ 第3關：實數 ➔ 第4關：虛數</b><br>
+          <span style="color:#38bdf8; font-size:0.82rem;">（接錯蘋果將冰凍 5 秒進行觀念講解，期間不扣遊戲時間）</span>
+        </p>
 
         <div class="form-group">
-          <label>2. 蘋果落下速度</label>
+          <label>選擇蘋果落下速度</label>
           <select id="speedSelect">
-            <option value="slow" selected>慢速 (Slow) — 適合仔細看清根號與 i</option>
-            <option value="medium">中速 (Medium) — 標準挑戰</option>
-            <option value="fast">快速 (Fast) — 反應極限</option>
+            <option value="slow" selected>慢速 (Slow) — 思考從容（推薦）</option>
+            <option value="medium">中速 (Medium) — 標準節奏</option>
+            <option value="fast">快速 (Fast) — 考驗反應</option>
           </select>
         </div>
 
-        <button class="primary-btn" id="startBtn">開始 30 秒挑戰！</button>
+        <button class="primary-btn" id="startBtn">開始果園挑戰！</button>
       </div>
     </div>
 
     <!-- 結算畫面 -->
     <div class="modal" id="endModal" style="display:none;">
       <div class="modal-content">
-        <h2 style="color:#38bdf8; margin-bottom:10px; font-size:1.4rem;">⏰ 時間到！關卡完成 🎉</h2>
+        <h2 style="color:#38bdf8; margin-bottom:8px; font-size:1.4rem;">🏆 全程挑戰完成！🎉</h2>
+        <div id="evalTitle" style="font-size:1.15rem; font-weight:bold; color:#facc15; margin-bottom:10px;">榮譽評價：數系大師</div>
         <table class="stats-table">
-          <tr><td>挑戰關卡：</td><td id="resStage">-</td></tr>
-          <tr><td>最終得分：</td><td id="resScore">0</td></tr>
-          <tr><td>成功接對：</td><td id="resCorrect">0 個</td></tr>
-          <tr><td>誤接凍結：</td><td id="resWrong">0 次</td></tr>
+          <tr><td>總得分：</td><td id="resScore">0</td></tr>
+          <tr><td>總接對蘋果：</td><td id="resCorrect">0 個</td></tr>
+          <tr><td>誤接冰凍次數：</td><td id="resWrong">0 次</td></tr>
+          <tr><td>完成進度：</td><td>連闖 4 關（120 秒）</td></tr>
         </table>
-        <button class="primary-btn" id="restartBtn">選擇其他關卡 / 再玩一次</button>
+        <button class="primary-btn" id="restartBtn">再次挑戰高分</button>
       </div>
     </div>
   </div>
 
   <script>
-    /* --- 數系題庫定義 ---
-     * baseType: 'rational' (有理數), 'irrational' (無理數), 'imaginary' (虛數)
-     * 注意：有理數與無理數皆屬於 'real' (實數)
-     */
+    /* --- 數系題庫定義 --- */
     const NUMBER_POOL = [
       // 有理數 (Rational) -> 同時也是實數 (Real)
       { text: "5", base: "rational", label: "實數及有理數", note: "整數屬於有理數，也是實數" },
@@ -249,8 +285,8 @@
       { text: "0", base: "rational", label: "實數及有理數", note: "0 是整數、有理數，也是實數" },
       { text: "3/4", base: "rational", label: "實數及有理數", note: "分數屬於有理數，也是實數" },
       { text: "-2/7", base: "rational", label: "實數及有理數", note: "負分數屬於有理數，也是實數" },
-      { text: "0.25", base: "rational", label: "實數及有理數", note: "有限小數可化為分數，屬於有理數" },
-      { text: "0.333...", base: "rational", label: "實數及有理數", note: "循環小數 (1/3) 屬於有理數" },
+      { text: "0.25", base: "rational", label: "實數及有理數", note: "有限小數可化為分數 1/4，屬於有理數" },
+      { text: "0.333...", base: "rational", label: "實數及有理數", note: "循環小數可化為分數 1/3，屬於有理數" },
       { text: "√9", base: "rational", label: "實數及有理數", note: "√9 = 3，開方後為整數，是有理數" },
       { text: "√16", base: "rational", label: "實數及有理數", note: "√16 = 4，屬於有理數及實數" },
       { text: "-√25", base: "rational", label: "實數及有理數", note: "-√25 = -5，屬於有理數及實數" },
@@ -279,12 +315,12 @@
       { text: "1 + √(-5)", base: "imaginary", label: "虛數 (Imaginary)", note: "含有 √(-5) = √5 i，屬於虛數" }
     ];
 
-    const STAGE_NAMES = {
-      rational: "有理數 (Rational Numbers)",
-      irrational: "無理數 (Irrational Numbers)",
-      real: "實數 (Real Numbers)",
-      imaginary: "虛數 (Imaginary Numbers)"
-    };
+    const STAGES = [
+      { id: "rational", name: "第 1 關：有理數 (Rational)", short: "有理數", color: "#38bdf8" },
+      { id: "irrational", name: "第 2 關：無理數 (Irrational)", short: "無理數", color: "#c084fc" },
+      { id: "real", name: "第 3 關：實數 (Real Numbers)", short: "實數 (包含有理與無理)", color: "#4ade80" },
+      { id: "imaginary", name: "第 4 關：虛數 (Imaginary Numbers)", short: "虛數 (Imaginary)", color: "#fb7185" }
+    ];
 
     /* --- 音效系統 (Web Audio API) --- */
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -296,8 +332,8 @@
       gain.connect(audioCtx.destination);
 
       if (type === 'catch_good') {
-        osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
-        osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.15); // A5
+        osc.frequency.setValueAtTime(587.33, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.15);
         gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
         gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
         osc.start();
@@ -310,65 +346,85 @@
         gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.35);
         osc.start();
         osc.stop(audioCtx.currentTime + 0.35);
+      } else if (type === 'stage_up') {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(440, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.3);
+        gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.3);
       }
     }
 
-    /* --- 畫布與遊戲狀態 --- */
+    /* --- 畫布與風景元素設定 --- */
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
 
-    let currentStage = "rational";
+    // 藍天白雲與小花裝飾資料
+    const clouds = [
+      { x: 120, y: 75, scale: 1.0, speed: 0.25 },
+      { x: 420, y: 55, scale: 1.25, speed: 0.18 },
+      { x: 680, y: 95, scale: 0.85, speed: 0.3 }
+    ];
+    const flowers = [
+      { x: 140, y: 545, color: "#fef08a" },
+      { x: 220, y: 570, color: "#fbcfe8" },
+      { x: 350, y: 555, color: "#ffffff" },
+      { x: 490, y: 575, color: "#fef08a" },
+      { x: 610, y: 550, color: "#fbcfe8" },
+      { x: 670, y: 572, color: "#ffffff" }
+    ];
+
+    let stageIndex = 0;
     let speedSetting = "slow";
     let score = 0;
     let correctCount = 0;
     let wrongCount = 0;
-    let timeLeft = 30;
+    let totalTimeLeft = 120; // 120 秒
+    let stageTimeLeft = 30;  // 每關 30 秒
     let isGameOver = true;
 
-    // 玩家人物狀態
     const player = {
       x: 400,
-      y: 520,
-      width: 110,
-      height: 65,
+      y: 515,
+      width: 116,
+      height: 68,
       speed: 9
     };
 
-    // 凍結狀態 (接錯暫停移動 2 秒)
-    let frozenUntil = 0;
-    let feedbackEffects = []; // 畫面上漂浮的 +100 文字
-
-    // 蘋果陣列與生成計時
+    let frozenUntil = 0; // 冰凍結束時間戳記
+    let feedbackEffects = [];
     let apples = [];
     let lastSpawnTime = 0;
 
     const SPEED_CONFIG = {
-      slow: { fallSpeedMin: 1.5, fallSpeedMax: 2.3, spawnInterval: 1300 },
-      medium: { fallSpeedMin: 2.4, fallSpeedMax: 3.4, spawnInterval: 1000 },
-      fast: { fallSpeedMin: 3.5, fallSpeedMax: 4.8, spawnInterval: 800 }
+      slow: { fallSpeedMin: 1.4, fallSpeedMax: 2.2, spawnInterval: 1350 },
+      medium: { fallSpeedMin: 2.2, fallSpeedMax: 3.2, spawnInterval: 1050 },
+      fast: { fallSpeedMin: 3.3, fallSpeedMax: 4.5, spawnInterval: 820 }
     };
 
-    // 鍵盤按鍵狀態
     const keys = { left: false, right: false };
 
-    /* --- 判斷蘋果是否符合當前關卡要求 --- */
-    function isTargetMatch(item, stage) {
-      if (stage === "rational") return item.base === "rational";
-      if (stage === "irrational") return item.base === "irrational";
-      if (stage === "real") return item.base === "rational" || item.base === "irrational";
-      if (stage === "imaginary") return item.base === "imaginary";
+    /* --- 判斷蘋果是否符合當前關卡 --- */
+    function isTargetMatch(item, currentStageId) {
+      if (currentStageId === "rational") return item.base === "rational";
+      if (currentStageId === "irrational") return item.base === "irrational";
+      if (currentStageId === "real") return item.base === "rational" || item.base === "irrational";
+      if (currentStageId === "imaginary") return item.base === "imaginary";
       return false;
     }
 
-    /* --- 生成蘋果（確保約 45% 機率出現正確目標，避免學生等太久） --- */
+    /* --- 生成立體蘋果 --- */
     function spawnApple() {
+      const curStageId = STAGES[stageIndex].id;
       const wantTarget = Math.random() < 0.45;
-      const matchingPool = NUMBER_POOL.filter(item => isTargetMatch(item, currentStage) === wantTarget);
+      const matchingPool = NUMBER_POOL.filter(item => isTargetMatch(item, curStageId) === wantTarget);
       const chosen = matchingPool[Math.floor(Math.random() * matchingPool.length)];
 
       const cfg = SPEED_CONFIG[speedSetting];
-      const radius = 36;
-      const x = Math.random() * (canvas.width - radius * 2 - 40) + radius + 20;
+      const radius = 38;
+      const x = Math.random() * (canvas.width - radius * 2 - 120) + radius + 60;
       const vy = cfg.fallSpeedMin + Math.random() * (cfg.fallSpeedMax - cfg.fallSpeedMin);
 
       apples.push({
@@ -380,16 +436,43 @@
       });
     }
 
+    /* --- 切換關卡 --- */
+    function advanceToNextStage() {
+      stageIndex++;
+      if (stageIndex >= STAGES.length) {
+        endGame();
+        return;
+      }
+      stageTimeLeft = 30;
+      apples = [];
+      playSound('stage_up');
+
+      const trans = document.getElementById("stageTransition");
+      trans.innerText = `🚀 ${STAGES[stageIndex].name} 開始！`;
+      trans.style.display = "block";
+      setTimeout(() => { trans.style.display = "none"; }, 1600);
+
+      updateBannerUI();
+    }
+
+    function updateBannerUI() {
+      const cur = STAGES[stageIndex];
+      const titleElem = document.getElementById("missionText");
+      titleElem.innerText = `🎯 ${cur.name}：請接住所有【${cur.short}】！`;
+      titleElem.style.color = cur.color;
+      document.getElementById("stageBadge").innerText = `${stageIndex + 1}/4`;
+    }
+
     /* --- 啟動遊戲 --- */
     let timerInterval = null;
     function startGame() {
-      currentStage = document.getElementById("stageSelect").value;
       speedSetting = document.getElementById("speedSelect").value;
-
+      stageIndex = 0;
       score = 0;
       correctCount = 0;
       wrongCount = 0;
-      timeLeft = 30;
+      totalTimeLeft = 120;
+      stageTimeLeft = 30;
       apples = [];
       feedbackEffects = [];
       frozenUntil = 0;
@@ -397,20 +480,30 @@
       player.x = canvas.width / 2;
 
       document.getElementById("freezeBanner").style.display = "none";
+      document.getElementById("stageTransition").style.display = "none";
       document.getElementById("startModal").style.display = "none";
       document.getElementById("endModal").style.display = "none";
-      document.getElementById("missionText").innerText = `🎯 本關目標：請接住所有【${STAGE_NAMES[currentStage]}】！`;
 
+      updateBannerUI();
       updateHeaderUI();
 
       if (timerInterval) clearInterval(timerInterval);
       timerInterval = setInterval(() => {
-        if (!isGameOver) {
-          timeLeft--;
-          updateHeaderUI();
-          if (timeLeft <= 0) {
-            endGame();
-          }
+        if (isGameOver) return;
+        // 🌟 關鍵：冰凍期間完全暫停遊戲計時！
+        if (performance.now() < frozenUntil) return;
+
+        totalTimeLeft--;
+        stageTimeLeft--;
+
+        if (stageTimeLeft <= 0 && stageIndex < 3) {
+          advanceToNextStage();
+        }
+
+        updateHeaderUI();
+
+        if (totalTimeLeft <= 0) {
+          endGame();
         }
       }, 1000);
 
@@ -421,30 +514,36 @@
 
     function updateHeaderUI() {
       document.getElementById("scoreVal").innerText = score;
-      document.getElementById("correctVal").innerText = correctCount;
-      document.getElementById("timeVal").innerText = `${timeLeft}s`;
+      document.getElementById("stageTimeVal").innerText = `${stageTimeLeft}s`;
+      document.getElementById("totalTimeVal").innerText = `${totalTimeLeft}s`;
     }
 
     function endGame() {
       isGameOver = true;
       if (timerInterval) clearInterval(timerInterval);
       document.getElementById("freezeBanner").style.display = "none";
+      document.getElementById("stageTransition").style.display = "none";
 
-      document.getElementById("resStage").innerText = STAGE_NAMES[currentStage];
       document.getElementById("resScore").innerText = score;
       document.getElementById("resCorrect").innerText = `${correctCount} 個`;
       document.getElementById("resWrong").innerText = `${wrongCount} 次`;
+
+      let evalText = "🏆 數系大師（太厲害了！）";
+      if (score < 1200) evalText = "🥉 數系新星（繼續加油！）";
+      else if (score < 1800) evalText = "🥈 數系高手（觀念非常清晰！）";
+      document.getElementById("evalTitle").innerText = `榮譽評價：${evalText}`;
+
       document.getElementById("endModal").style.display = "flex";
     }
 
-    /* --- 觸發接錯 2 秒凍結與提示 --- */
+    /* --- 觸發接錯 5 秒冰凍與觀念講解 --- */
     function triggerFreeze(appleData) {
       const now = performance.now();
-      frozenUntil = now + 2000; // 凍結 2000 毫秒 (2 秒)
+      frozenUntil = now + 5000; // 🌟 冰凍 5000 毫秒 (5 秒)
 
       const banner = document.getElementById("freezeBanner");
       const desc = document.getElementById("freezeDesc");
-      desc.innerHTML = `蘋果上的 <b>【 ${appleData.text} 】</b> 屬於 <b>${appleData.label}</b><br><span style="font-size:0.9rem; color:#fde047;">💡 ${appleData.note}</span>`;
+      desc.innerHTML = `蘋果上的 <b>【 ${appleData.text} 】</b> 屬於 <b style="color:#fde047;">${appleData.label}</b><br><span style="font-size:0.95rem; color:#e2e8f0;">💡 ${appleData.note}</span>`;
       banner.style.display = "block";
     }
 
@@ -458,17 +557,30 @@
     }
 
     function update(now) {
+      // 白雲緩慢飄動
+      clouds.forEach(c => {
+        c.x += c.speed;
+        if (c.x > canvas.width + 100) c.x = -120;
+      });
+
       const isFrozen = now < frozenUntil;
-      if (!isFrozen) {
+      if (isFrozen) {
+        // 更新冰凍提示框上的剩餘秒數
+        const remainSec = Math.max(0, (frozenUntil - now) / 1000).toFixed(1);
+        document.getElementById("freezeTitle").innerText = `❄️ 接錯了！冰凍學習 ${remainSec} 秒`;
+        // 冰凍時延後生成時間，且蘋果與人物皆暫停移動
+        lastSpawnTime = now;
+        return;
+      } else {
         document.getElementById("freezeBanner").style.display = "none";
-        // 鍵盤移動
-        if (keys.left) player.x -= player.speed;
-        if (keys.right) player.x += player.speed;
-        // 邊界限制
-        const halfW = player.width / 2;
-        if (player.x < halfW) player.x = halfW;
-        if (player.x > canvas.width - halfW) player.x = canvas.width - halfW;
       }
+
+      // 鍵盤移動
+      if (keys.left) player.x -= player.speed;
+      if (keys.right) player.x += player.speed;
+      const halfW = player.width / 2;
+      if (player.x < halfW) player.x = halfW;
+      if (player.x > canvas.width - halfW) player.x = canvas.width - halfW;
 
       // 定時生成蘋果
       const cfg = SPEED_CONFIG[speedSetting];
@@ -477,16 +589,16 @@
         lastSpawnTime = now;
       }
 
-      // 更新蘋果位置與碰撞檢查
+      // 更新蘋果與碰撞檢查
+      const curStageId = STAGES[stageIndex].id;
       for (let i = apples.length - 1; i >= 0; i--) {
         const a = apples[i];
         a.y += a.vy;
 
-        // 檢查是否進入果籃範圍
-        const basketTop = player.y - 15;
-        const basketBottom = player.y + 35;
-        const basketLeft = player.x - player.width / 2 - 10;
-        const basketRight = player.x + player.width / 2 + 10;
+        const basketTop = player.y - 16;
+        const basketBottom = player.y + 38;
+        const basketLeft = player.x - player.width / 2 - 8;
+        const basketRight = player.x + player.width / 2 + 8;
 
         if (
           a.y + a.radius >= basketTop &&
@@ -494,18 +606,17 @@
           a.x >= basketLeft &&
           a.x <= basketRight
         ) {
-          // 接到蘋果！判斷對錯
-          const correct = isTargetMatch(a.data, currentStage);
+          const correct = isTargetMatch(a.data, curStageId);
           if (correct) {
             playSound('catch_good');
             score += 100;
             correctCount++;
-            feedbackEffects.push({ x: player.x, y: player.y - 30, text: "+100 ✓", color: "#4ade80", alpha: 1 });
+            feedbackEffects.push({ x: player.x, y: player.y - 35, text: "+100 ✓", color: "#15803d", alpha: 1 });
           } else {
             playSound('catch_bad');
             score = Math.max(0, score - 30);
             wrongCount++;
-            feedbackEffects.push({ x: player.x, y: player.y - 30, text: "❄️ 凍結 2 秒!", color: "#f87171", alpha: 1 });
+            feedbackEffects.push({ x: player.x, y: player.y - 35, text: "❄️ 冰凍 5 秒!", color: "#b91c1c", alpha: 1 });
             triggerFreeze(a.data);
           }
           updateHeaderUI();
@@ -513,13 +624,11 @@
           continue;
         }
 
-        // 超出畫面底部移除
         if (a.y - a.radius > canvas.height) {
           apples.splice(i, 1);
         }
       }
 
-      // 更新漂浮特效文字
       for (let i = feedbackEffects.length - 1; i >= 0; i--) {
         feedbackEffects[i].y -= 1.2;
         feedbackEffects[i].alpha -= 0.025;
@@ -527,106 +636,402 @@
       }
     }
 
-    /* --- 繪製畫面 --- */
-    function draw(now) {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    /* --- 繪製藍天白雲、花草樹木與 3D 立體物件 --- */
+    function drawScenery() {
+      // 1. 藍天漸層背景
+      const skyGrad = ctx.createLinearGradient(0, 0, 0, 480);
+      skyGrad.addColorStop(0, "#38bdf8");
+      skyGrad.addColorStop(0.65, "#bae6fd");
+      skyGrad.addColorStop(1, "#e0f2fe");
+      ctx.fillStyle = skyGrad;
+      ctx.fillRect(0, 0, canvas.width, 480);
 
-      // 1. 繪製落下的蘋果
-      apples.forEach(a => {
+      // 2. 溫暖陽光
+      ctx.save();
+      const sunGrad = ctx.createRadialGradient(710, 70, 10, 710, 70, 65);
+      sunGrad.addColorStop(0, "#fef08a");
+      sunGrad.addColorStop(0.5, "#facc15");
+      sunGrad.addColorStop(1, "rgba(250, 204, 21, 0)");
+      ctx.fillStyle = sunGrad;
+      ctx.beginPath();
+      ctx.arc(710, 70, 65, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
+      // 3. 飄動立體白雲
+      clouds.forEach(c => {
         ctx.save();
-        // 蘋果果實 (圓潤紅色)
-        ctx.fillStyle = "#e11d48";
+        ctx.translate(c.x, c.y);
+        ctx.scale(c.scale, c.scale);
+        // 雲朵底部陰影
+        ctx.fillStyle = "rgba(148, 163, 184, 0.25)";
         ctx.beginPath();
-        ctx.arc(a.x, a.y, a.radius, 0, Math.PI * 2);
+        ctx.arc(0, 8, 28, 0, Math.PI * 2);
+        ctx.arc(28, 4, 34, 0, Math.PI * 2);
+        ctx.arc(60, 8, 26, 0, Math.PI * 2);
         ctx.fill();
-        ctx.lineWidth = 2;
-        ctx.strokeStyle = "#fda4af";
-        ctx.stroke();
-
-        // 蘋果蒂與綠葉
-        ctx.strokeStyle = "#78350f";
-        ctx.lineWidth = 4;
-        ctx.beginPath();
-        ctx.moveTo(a.x, a.y - a.radius + 3);
-        ctx.lineTo(a.x + 3, a.y - a.radius - 10);
-        ctx.stroke();
-
-        ctx.fillStyle = "#22c55e";
-        ctx.beginPath();
-        ctx.ellipse(a.x + 10, a.y - a.radius - 6, 9, 5, Math.PI / 6, 0, Math.PI * 2);
-        ctx.fill();
-
-        // 蘋果上的數字
+        // 雲朵亮面
         ctx.fillStyle = "#ffffff";
-        ctx.font = "bold 20px 'Segoe UI', Consolas, sans-serif";
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.fillText(a.data.text, a.x, a.y + 2);
+        ctx.beginPath();
+        ctx.arc(0, 0, 28, 0, Math.PI * 2);
+        ctx.arc(28, -6, 35, 0, Math.PI * 2);
+        ctx.arc(60, 0, 26, 0, Math.PI * 2);
+        ctx.fill();
         ctx.restore();
       });
 
-      // 2. 繪製下方接果籃人物
-      const isFrozen = now < frozenUntil;
+      // 4. 遠景翠綠山丘
+      const farHillGrad = ctx.createLinearGradient(0, 390, 0, 500);
+      farHillGrad.addColorStop(0, "#86efac");
+      farHillGrad.addColorStop(1, "#4ade80");
+      ctx.fillStyle = farHillGrad;
+      ctx.beginPath();
+      ctx.moveTo(0, 490);
+      ctx.quadraticCurveTo(220, 385, 460, 465);
+      ctx.quadraticCurveTo(650, 405, 800, 455);
+      ctx.lineTo(800, 520);
+      ctx.lineTo(0, 520);
+      ctx.closePath();
+      ctx.fill();
+
+      // 5. 近景草地山坡
+      const nearHillGrad = ctx.createLinearGradient(0, 460, 0, 600);
+      nearHillGrad.addColorStop(0, "#4ade80");
+      nearHillGrad.addColorStop(0.4, "#22c55e");
+      nearHillGrad.addColorStop(1, "#15803d");
+      ctx.fillStyle = nearHillGrad;
+      ctx.beginPath();
+      ctx.moveTo(0, 480);
+      ctx.quadraticCurveTo(380, 450, 800, 485);
+      ctx.lineTo(800, 600);
+      ctx.lineTo(0, 600);
+      ctx.closePath();
+      ctx.fill();
+
+      // 6. 左右兩側立體果樹
+      draw3DTree(55, 475, 1.0);
+      draw3DTree(745, 480, 0.92);
+
+      // 7. 草地上的立體小花與草叢
+      flowers.forEach(f => {
+        ctx.save();
+        // 小草葉
+        ctx.strokeStyle = "#166534";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(f.x, f.y + 8);
+        ctx.lineTo(f.x - 4, f.y);
+        ctx.moveTo(f.x, f.y + 8);
+        ctx.lineTo(f.x + 4, f.y);
+        ctx.stroke();
+        // 花瓣
+        ctx.fillStyle = f.color;
+        for (let a = 0; a < Math.PI * 2; a += Math.PI / 2.5) {
+          ctx.beginPath();
+          ctx.arc(f.x + Math.cos(a) * 4, f.y - 3 + Math.sin(a) * 4, 3, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        // 花蕊
+        ctx.fillStyle = "#f97316";
+        ctx.beginPath();
+        ctx.arc(f.x, f.y - 3, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      });
+    }
+
+    function draw3DTree(x, y, scale) {
       ctx.save();
+      ctx.translate(x, y);
+      ctx.scale(scale, scale);
 
-      // 人物頭部與身體
-      ctx.fillStyle = isFrozen ? "#38bdf8" : "#fbbf24";
+      // 樹幹立體圓柱漸層
+      const trunkGrad = ctx.createLinearGradient(-16, 0, 16, 0);
+      trunkGrad.addColorStop(0, "#451a03");
+      trunkGrad.addColorStop(0.4, "#92400e");
+      trunkGrad.addColorStop(1, "#451a03");
+      ctx.fillStyle = trunkGrad;
+      ctx.fillRect(-14, -85, 28, 95);
+
+      // 樹冠立體球體叢
+      const crownPositions = [
+        { cx: 0, cy: -135, r: 48 },
+        { cx: -34, cy: -105, r: 38 },
+        { cx: 34, cy: -105, r: 38 },
+        { cx: 0, cy: -95, r: 42 }
+      ];
+      crownPositions.forEach(pos => {
+        const leafGrad = ctx.createRadialGradient(pos.cx - 12, pos.cy - 12, 6, pos.cx, pos.cy, pos.r);
+        leafGrad.addColorStop(0, "#86efac");
+        leafGrad.addColorStop(0.55, "#16a34a");
+        leafGrad.addColorStop(1, "#14532d");
+        ctx.fillStyle = leafGrad;
+        ctx.beginPath();
+        ctx.arc(pos.cx, pos.cy, pos.r, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      ctx.restore();
+    }
+
+    function draw3DApple(a) {
+      ctx.save();
+      const { x, y, radius } = a;
+
+      // 1. 蘋果外部柔和陰影
+      ctx.shadowColor = "rgba(0, 0, 0, 0.35)";
+      ctx.shadowBlur = 10;
+      ctx.shadowOffsetY = 5;
+
+      // 2. 蘋果 3D 球體放射漸層
+      const appleGrad = ctx.createRadialGradient(
+        x - radius * 0.35,
+        y - radius * 0.35,
+        radius * 0.1,
+        x,
+        y,
+        radius
+      );
+      appleGrad.addColorStop(0, "#fda4af");
+      appleGrad.addColorStop(0.3, "#f43f5e");
+      appleGrad.addColorStop(0.75, "#be123c");
+      appleGrad.addColorStop(1, "#881337");
+
+      ctx.fillStyle = appleGrad;
       ctx.beginPath();
-      ctx.arc(player.x, player.y - 36, 18, 0, Math.PI * 2);
+      ctx.arc(x, y, radius, 0, Math.PI * 2);
       ctx.fill();
 
-      // 表情 (正常笑臉 vs 冰凍驚訝臉)
-      ctx.fillStyle = "#0f172a";
-      ctx.beginPath();
-      ctx.arc(player.x - 6, player.y - 39, 2.5, 0, Math.PI * 2);
-      ctx.arc(player.x + 6, player.y - 39, 2.5, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.beginPath();
-      if (isFrozen) {
-        ctx.arc(player.x, player.y - 31, 4, 0, Math.PI * 2);
-        ctx.stroke();
-      } else {
-        ctx.arc(player.x, player.y - 33, 6, 0, Math.PI);
-        ctx.stroke();
-      }
+      // 重置陰影避免影響內部細節
+      ctx.shadowColor = "transparent";
 
-      // 繪製果籃
-      ctx.fillStyle = isFrozen ? "#0284c7" : "#d97706";
+      // 3. 左上角立體高光反光
+      ctx.fillStyle = "rgba(255, 255, 255, 0.45)";
       ctx.beginPath();
-      ctx.roundRect(player.x - player.width / 2, player.y - 18, player.width, 42, [4, 4, 18, 18]);
+      ctx.ellipse(x - radius * 0.38, y - radius * 0.38, radius * 0.24, radius * 0.13, -Math.PI / 4, 0, Math.PI * 2);
       ctx.fill();
-      ctx.lineWidth = 3;
-      ctx.strokeStyle = isFrozen ? "#bae6fd" : "#fef08a";
+
+      // 4. 蘋果頂部凹陷與立體木質果蒂
+      ctx.strokeStyle = "#451a03";
+      ctx.lineWidth = 4.5;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(x, y - radius + 4);
+      ctx.quadraticCurveTo(x + 3, y - radius - 8, x + 7, y - radius - 11);
       ctx.stroke();
 
-      // 果籃上的狀態文字
+      // 5. 立體雙色綠葉
+      const leafGrad = ctx.createLinearGradient(x + 4, y - radius - 12, x + 22, y - radius - 2);
+      leafGrad.addColorStop(0, "#86efac");
+      leafGrad.addColorStop(1, "#15803d");
+      ctx.fillStyle = leafGrad;
+      ctx.beginPath();
+      ctx.ellipse(x + 13, y - radius - 6, 11, 5.5, Math.PI / 7, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 6. 蘋果上的數學數字（加上深色立體描邊確保清晰易讀）
+      ctx.font = "bold 20px 'Segoe UI', Consolas, sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = "rgba(69, 10, 10, 0.85)";
+      ctx.strokeText(a.data.text, x, y + 2);
+      ctx.fillStyle = "#ffffff";
+      ctx.fillText(a.data.text, x, y + 2);
+
+      ctx.restore();
+    }
+
+    function draw3DPlayerAndBasket(now) {
+      const isFrozen = now < frozenUntil;
+      const px = player.x;
+      const py = player.y;
+
+      ctx.save();
+
+      // 0. 地面人物陰影
+      ctx.fillStyle = "rgba(0, 0, 0, 0.28)";
+      ctx.beginPath();
+      ctx.ellipse(px, py + 42, player.width * 0.52, 10, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 1. 人物身體（立體圓領衫）
+      const shirtGrad = ctx.createLinearGradient(px - 28, py - 35, px + 28, py + 10);
+      if (isFrozen) {
+        shirtGrad.addColorStop(0, "#bae6fd");
+        shirtGrad.addColorStop(1, "#0284c7");
+      } else {
+        shirtGrad.addColorStop(0, "#60a5fa");
+        shirtGrad.addColorStop(1, "#1d4ed8");
+      }
+      ctx.fillStyle = shirtGrad;
+      ctx.beginPath();
+      ctx.roundRect(px - 28, py - 34, 56, 36, 14);
+      ctx.fill();
+
+      // 2. 人物立體頭部（3D 膚色球體漸層）
+      const headGrad = ctx.createRadialGradient(px - 7, py - 58, 3, px, py - 52, 23);
+      if (isFrozen) {
+        headGrad.addColorStop(0, "#e0f2fe");
+        headGrad.addColorStop(1, "#38bdf8");
+      } else {
+        headGrad.addColorStop(0, "#fef3c7");
+        headGrad.addColorStop(0.6, "#fde68a");
+        headGrad.addColorStop(1, "#f59e0b");
+      }
+      ctx.fillStyle = headGrad;
+      ctx.beginPath();
+      ctx.arc(px, py - 52, 22, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 3. 陽光遮陽草帽
+      const hatGrad = ctx.createLinearGradient(px - 26, py - 78, px + 26, py - 62);
+      hatGrad.addColorStop(0, "#fef08a");
+      hatGrad.addColorStop(1, "#ca8a04");
+      ctx.fillStyle = hatGrad;
+      // 帽沿
+      ctx.beginPath();
+      ctx.ellipse(px, py - 67, 28, 6, 0, 0, Math.PI * 2);
+      ctx.fill();
+      // 帽頂
+      ctx.beginPath();
+      ctx.arc(px, py - 67, 17, Math.PI, 0);
+      ctx.fill();
+      // 紅絲帶
+      ctx.fillStyle = "#e11d48";
+      ctx.fillRect(px - 16, py - 70, 32, 4);
+
+      // 4. 立體五官與腮紅
+      if (!isFrozen) {
+        ctx.fillStyle = "rgba(244, 63, 94, 0.35)";
+        ctx.beginPath();
+        ctx.arc(px - 12, py - 49, 4, 0, Math.PI * 2);
+        ctx.arc(px + 12, py - 49, 4, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.fillStyle = "#0f172a";
+      ctx.beginPath();
+      ctx.arc(px - 7, py - 54, 2.8, 0, Math.PI * 2);
+      ctx.arc(px + 7, py - 54, 2.8, 0, Math.PI * 2);
+      ctx.fill();
+      // 眼神高光
+      ctx.fillStyle = "#ffffff";
+      ctx.beginPath();
+      ctx.arc(px - 8, py - 55, 1, 0, Math.PI * 2);
+      ctx.arc(px + 6, py - 55, 1, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 嘴巴
+      ctx.strokeStyle = "#0f172a";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      if (isFrozen) {
+        ctx.arc(px, py - 45, 4, 0, Math.PI * 2);
+      } else {
+        ctx.arc(px, py - 47, 6, 0.15 * Math.PI, 0.85 * Math.PI);
+      }
+      ctx.stroke();
+
+      // 5. 3D 立體編織果籃
+      const bw = player.width;
+      const bh = 44;
+      const bx = px - bw / 2;
+      const by = py - 14;
+
+      const basketGrad = ctx.createLinearGradient(bx, by, bx + bw, by);
+      if (isFrozen) {
+        basketGrad.addColorStop(0, "#0284c7");
+        basketGrad.addColorStop(0.5, "#7dd3fc");
+        basketGrad.addColorStop(1, "#0369a1");
+      } else {
+        basketGrad.addColorStop(0, "#78350f");
+        basketGrad.addColorStop(0.25, "#d97706");
+        basketGrad.addColorStop(0.5, "#fbbf24");
+        basketGrad.addColorStop(0.75, "#d97706");
+        basketGrad.addColorStop(1, "#78350f");
+      }
+
+      // 果籃主體
+      ctx.fillStyle = basketGrad;
+      ctx.beginPath();
+      ctx.roundRect(bx, by, bw, bh, [4, 4, 22, 22]);
+      ctx.fill();
+
+      // 果籃編織格紋細節
+      ctx.strokeStyle = isFrozen ? "rgba(255,255,255,0.45)" : "rgba(69, 26, 3, 0.35)";
+      ctx.lineWidth = 2;
+      for (let i = 18; i < bw; i += 18) {
+        ctx.beginPath();
+        ctx.moveTo(bx + i, by + 6);
+        ctx.lineTo(bx + i, by + bh - 4);
+        ctx.stroke();
+      }
+      ctx.beginPath();
+      ctx.moveTo(bx + 4, by + 20);
+      ctx.lineTo(bx + bw - 4, by + 20);
+      ctx.moveTo(bx + 8, by + 32);
+      ctx.lineTo(bx + bw - 8, by + 32);
+      ctx.stroke();
+
+      // 果籃立體厚邊框 (Rim)
+      const rimGrad = ctx.createLinearGradient(bx, by - 6, bx, by + 6);
+      rimGrad.addColorStop(0, isFrozen ? "#e0f2fe" : "#fef08a");
+      rimGrad.addColorStop(1, isFrozen ? "#0284c7" : "#b45309");
+      ctx.fillStyle = rimGrad;
+      ctx.beginPath();
+      ctx.roundRect(bx - 5, by - 4, bw + 10, 11, 6);
+      ctx.fill();
+
+      // 6. 雙手環抱果籃兩側（增加立體感）
+      ctx.fillStyle = isFrozen ? "#7dd3fc" : "#fcd34d";
+      ctx.beginPath();
+      ctx.arc(bx + 2, by + 16, 9, 0, Math.PI * 2);
+      ctx.arc(bx + bw - 2, by + 16, 9, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 7. 冰凍狀態時的半透明冰晶外罩與文字
       ctx.fillStyle = "#ffffff";
       ctx.font = "bold 14px sans-serif";
       ctx.textAlign = "center";
+      ctx.shadowColor = "rgba(0,0,0,0.7)";
+      ctx.shadowBlur = 4;
       if (isFrozen) {
-        const remainSec = ((frozenUntil - now) / 1000).toFixed(1);
-        ctx.fillText(`❄️ 凍結 ${remainSec}s`, player.x, player.y + 6);
+        const remainSec = Math.max(0, (frozenUntil - now) / 1000).toFixed(1);
+        ctx.fillText(`❄️ 冰凍暫停 ${remainSec}s`, px, by + 26);
       } else {
-        ctx.fillText("🧺 左右滑動接果", player.x, player.y + 6);
+        ctx.fillText("🧺 左右滑動接果", px, by + 26);
       }
-      ctx.restore();
 
-      // 3. 繪製漂浮加扣分文字
+      ctx.restore();
+    }
+
+    function draw(now) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // 1. 繪製藍天白雲與花草樹木背景
+      drawScenery();
+
+      // 2. 繪製所有 3D 立體蘋果
+      apples.forEach(a => draw3DApple(a));
+
+      // 3. 繪製 3D 人物與編織果籃
+      draw3DPlayerAndBasket(now);
+
+      // 4. 漂浮加分特效
       feedbackEffects.forEach(fx => {
         ctx.save();
         ctx.globalAlpha = Math.max(0, fx.alpha);
         ctx.fillStyle = fx.color;
-        ctx.font = "bold 22px sans-serif";
+        ctx.font = "bold 24px sans-serif";
         ctx.textAlign = "center";
         ctx.fillText(fx.text, fx.x, fx.y);
         ctx.restore();
       });
     }
 
-    /* --- iPad 觸控與滑鼠拖曳控制 (左右滑動) --- */
+    /* --- iPad 觸控與滑鼠操控 --- */
     function handlePointerMove(clientX) {
       if (isGameOver) return;
-      if (performance.now() < frozenUntil) return; // 凍結期間禁止滑動移動！
+      if (performance.now() < frozenUntil) return; // 冰凍期間不可移動
 
       const rect = canvas.getBoundingClientRect();
       const scaleX = canvas.width / rect.width;
@@ -638,23 +1043,20 @@
       player.x = targetX;
     }
 
-    // 支援 iPad 手指直接滑動
     canvas.addEventListener("touchstart", e => {
       if (e.touches.length > 0) handlePointerMove(e.touches[0].clientX);
     }, { passive: false });
 
     canvas.addEventListener("touchmove", e => {
-      e.preventDefault(); // 防止 iPad 畫面被拉動
+      e.preventDefault();
       if (e.touches.length > 0) handlePointerMove(e.touches[0].clientX);
     }, { passive: false });
 
-    // 支援電腦滑鼠移動
     let isMouseDown = false;
     canvas.addEventListener("mousedown", e => { isMouseDown = true; handlePointerMove(e.clientX); });
     window.addEventListener("mousemove", e => { if (isMouseDown) handlePointerMove(e.clientX); });
     window.addEventListener("mouseup", () => { isMouseDown = false; });
 
-    // 支援鍵盤左右方向鍵
     window.addEventListener("keydown", e => {
       if (e.key === "ArrowLeft" || e.key === "a" || e.key === "A") keys.left = true;
       if (e.key === "ArrowRight" || e.key === "d" || e.key === "D") keys.right = true;
@@ -669,6 +1071,9 @@
       document.getElementById("endModal").style.display = "none";
       document.getElementById("startModal").style.display = "flex";
     };
+
+    // 初始先畫一次背景讓畫面美觀
+    drawScenery();
   </script>
 </body>
 </html>
