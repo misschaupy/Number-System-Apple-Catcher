@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>數學數系大挑戰：複數接蘋果</title>
+  <style>
+    :root {
+      --bg-color: #0f172a;
+      --card-bg: #1e293b;
+      --accent: #f43f5e;
+      --accent-hover: #e11d48;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-user-select: none;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    body {
+      background-color: var(--bg-color);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      height: 100vh;
+      overflow: hidden; /* 防止 iPad 滑動時畫面上下晃動 */
+      touch-action: none; /* 鎖定觸控預設行為，讓左右滑動極致順暢 */
+      padding: 6px;
+    }
+    header {
+      width: 100%;
+      max-width: 700px;
+      padding: 10px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--card-bg);
+      border-bottom: 2px solid #334155;
+      border-radius: 10px 10px 0 0;
+      flex-shrink: 0;
+    }
+    h1 { font-size: 1.15rem; color: #fb7185; display: flex; align-items: center; gap: 6px; }
+    .status-bar {
+      display: flex;
+      gap: 16px;
+      font-size: 0.95rem;
+      font-weight: bold;
+    }
+    .target-banner {
+      width: 100%;
+      max-width: 700px;
+      background: #020617;
+      padding: 8px 12px;
+      text-align: center;
+      border-left: 2px solid #334155;
+      border-right: 2px solid #334155;
+      flex-shrink: 0;
+    }
+    .target-title {
+      font-size: 1.25rem;
+      font-weight: bold;
+      color: #38bdf8;
+    }
+    .game-container {
+      position: relative;
+      width: 100%;
+      max-width: 700px;
+      flex-grow: 1;
+      max-height: calc(100vh - 110px);
+      aspect-ratio: 4 / 3;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    canvas {
+      background: linear-gradient(180deg, #0f172a 0%, #1e293b 85%, #14532d 85%, #166534 100%);
+      border: 2px solid #334155;
+      border-radius: 0 0 12px 12px;
+      width: 100%;
+      height: 100%;
+      display: block;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+      touch-action: none;
+    }
+    /* 彈窗設定 */
+    .modal {
+      position: absolute;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.95);
+      border-radius: 0 0 12px 12px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      z-index: 20;
+    }
+    .modal-content {
+      width: 100%;
+      max-width: 420px;
+      text-align: center;
+    }
+    .form-group {
+      margin-bottom: 14px;
+      text-align: left;
+    }
+    label {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+    select, button {
+      width: 100%;
+      padding: 10px 14px;
+      background: #334155;
+      border: 1px solid #475569;
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 1rem;
+      outline: none;
+    }
+    button.primary-btn {
+      background: var(--accent);
+      color: #ffffff;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+      margin-top: 10px;
+      font-size: 1.05rem;
+      transition: background 0.2s;
+    }
+    button.primary-btn:hover { background: var(--accent-hover); }
+    .stats-table {
+      width: 100%;
+      margin: 14px 0;
+      border-collapse: collapse;
+      font-size: 0.95rem;
+    }
+    .stats-table td { padding: 6px; text-align: left; border-bottom: 1px solid #334155; }
+    .stats-table td:last-child { text-align: right; font-weight: bold; color: #facc15; }
+    
+    /* 錯誤凍結提示浮層 */
+    .freeze-banner {
+      position: absolute;
+      top: 32%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(220, 38, 38, 0.95);
+      border: 3px solid #fca5a5;
+      color: #fff;
+      padding: 16px 22px;
+      border-radius: 12px;
+      text-align: center;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.7);
+      z-index: 15;
+      display: none;
+      width: 85%;
+      max-width: 480px;
+      pointer-events: none;
+    }
+    .freeze-banner h3 { font-size: 1.25rem; margin-bottom: 6px; color: #fef08a; }
+    .freeze-banner p { font-size: 1rem; line-height: 1.4; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>🍎 複數與數系：接蘋果挑戰</h1>
+    <div class="status-bar">
+      <span>得分: <span id="scoreVal" style="color:#38bdf8;">0</span></span>
+      <span>接對: <span id="correctVal" style="color:#4ade80;">0</span></span>
+      <span>剩餘時間: <span id="timeVal" style="color:#facc15;">30s</span></span>
+    </div>
+  </header>
+
+  <div class="target-banner">
+    <div class="target-title" id="missionText">請選擇關卡開始遊戲</div>
+    <div style="font-size: 0.8rem; color: #94a3b8; margin-top: 2px;">📱 在畫面左右滑動手指（或用方向鍵）控制人物移動</div>
+  </div>
+
+  <div class="game-container">
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+
+    <!-- 接錯凍結 2 秒提示框 -->
+    <div class="freeze-banner" id="freezeBanner">
+      <h3 id="freezeTitle">❄️ 接錯了！凍結移動 2 秒！</h3>
+      <p id="freezeDesc"></p>
+    </div>
+
+    <!-- 開始選單 -->
+    <div class="modal" id="startModal">
+      <div class="modal-content">
+        <h2 style="margin-bottom:14px; color:#fb7185; font-size:1.4rem;">🍎 選擇數系挑戰關卡</h2>
+        
+        <div class="form-group">
+          <label>1. 選擇目標關卡（每關 30 秒）</label>
+          <select id="stageSelect">
+            <option value="rational">關卡一：有理數 (Rational Numbers)</option>
+            <option value="irrational">關卡二：無理數 (Irrational Numbers)</option>
+            <option value="real">關卡三：實數 (Real Numbers)</option>
+            <option value="imaginary">關卡四：虛數 (Imaginary Numbers)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>2. 蘋果落下速度</label>
+          <select id="speedSelect">
+            <option value="slow" selected>慢速 (Slow) — 適合仔細看清根號與 i</option>
+            <option value="medium">中速 (Medium) — 標準挑戰</option>
+            <option value="fast">快速 (Fast) — 反應極限</option>
+          </select>
+        </div>
+
+        <button class="primary-btn" id="startBtn">開始 30 秒挑戰！</button>
+      </div>
+    </div>
+
+    <!-- 結算畫面 -->
+    <div class="modal" id="endModal" style="display:none;">
+      <div class="modal-content">
+        <h2 style="color:#38bdf8; margin-bottom:10px; font-size:1.4rem;">⏰ 時間到！關卡完成 🎉</h2>
+        <table class="stats-table">
+          <tr><td>挑戰關卡：</td><td id="resStage">-</td></tr>
+          <tr><td>最終得分：</td><td id="resScore">0</td></tr>
+          <tr><td>成功接對：</td><td id="resCorrect">0 個</td></tr>
+          <tr><td>誤接凍結：</td><td id="resWrong">0 次</td></tr>
+        </table>
+        <button class="primary-btn" id="restartBtn">選擇其他關卡 / 再玩一次</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* --- 數系題庫定義 ---
+     * baseType: 'rational' (有理數), 'irrational' (無理數), 'imaginary' (虛數)
+     * 注意：有理數與無理數皆屬於 'real' (實數)
+     */
+    const NUMBER_POOL = [
+      // 有理數 (Rational) -> 同時也是實數 (Real)
+      { text: "5", base: "rational", label: "實數及有理數", note: "整數屬於有理數，也是實數" },
+      { text: "-12", base: "rational", label: "實數及有理數", note: "負整數屬於有理數，也是實數" },
+      { text: "0", base: "rational", label: "實數及有理數", note: "0 是整數、有理數，也是實數" },
+      { text: "3/4", base: "rational", label: "實數及有理數", note: "分數屬於有理數，也是實數" },
+      { text: "-2/7", base: "rational", label: "實數及有理數", note: "負分數屬於有理數，也是實數" },
+      { text: "0.25", base: "rational", label: "實數及有理數", note: "有限小數可化為分數，屬於有理數" },
+      { text: "0.333...", base: "rational", label: "實數及有理數", note: "循環小數 (1/3) 屬於有理數" },
+      { text: "√9", base: "rational", label: "實數及有理數", note: "√9 = 3，開方後為整數，是有理數" },
+      { text: "√16", base: "rational", label: "實數及有理數", note: "√16 = 4，屬於有理數及實數" },
+      { text: "-√25", base: "rational", label: "實數及有理數", note: "-√25 = -5，屬於有理數及實數" },
+      { text: "i²", base: "rational", label: "實數及有理數", note: "小心陷阱！i² = -1，它是實數及有理數！" },
+      { text: "i⁴", base: "rational", label: "實數及有理數", note: "小心陷阱！i⁴ = 1，它是實數及有理數！" },
+
+      // 無理數 (Irrational) -> 同時也是實數 (Real)
+      { text: "√2", base: "irrational", label: "實數及無理數", note: "√2 不能化為分數，是無理數（也是實數）" },
+      { text: "√3", base: "irrational", label: "實數及無理數", note: "√3 是不盡根，屬於無理數（也是實數）" },
+      { text: "-√5", base: "irrational", label: "實數及無理數", note: "-√5 是無理數（也是實數）" },
+      { text: "√7", base: "irrational", label: "實數及無理數", note: "√7 是不盡根，屬於無理數（也是實數）" },
+      { text: "π", base: "irrational", label: "實數及無理數", note: "圓周率 π 是無限不循環小數，屬無理數" },
+      { text: "-2π", base: "irrational", label: "實數及無理數", note: "含 π 的倍數仍是無理數（也是實數）" },
+      { text: "1 + √2", base: "irrational", label: "實數及無理數", note: "有理數加無理數，結果仍是無理數" },
+      { text: "√8", base: "irrational", label: "實數及無理數", note: "√8 = 2√2，仍是無理數（也是實數）" },
+
+      // 虛數 (Imaginary) -> 不屬於實數
+      { text: "i", base: "imaginary", label: "虛數 (Imaginary)", note: "i = √(-1) 是虛數單位" },
+      { text: "-4i", base: "imaginary", label: "虛數 (Imaginary)", note: "純虛數，虛部不為 0" },
+      { text: "3 + 2i", base: "imaginary", label: "虛數 (Imaginary)", note: "帶有虛部 2i，屬於虛數" },
+      { text: "5 - i", base: "imaginary", label: "虛數 (Imaginary)", note: "帶有虛部 -i，屬於虛數" },
+      { text: "√(-4)", base: "imaginary", label: "虛數 (Imaginary)", note: "負數開平方 √(-4) = 2i，屬於虛數" },
+      { text: "√(-9)", base: "imaginary", label: "虛數 (Imaginary)", note: "負數開平方 √(-9) = 3i，屬於虛數" },
+      { text: "√(-2)", base: "imaginary", label: "虛數 (Imaginary)", note: "根號內為負數，屬於虛數" },
+      { text: "i³", base: "imaginary", label: "虛數 (Imaginary)", note: "i³ = -i，屬於虛數" },
+      { text: "1 + √(-5)", base: "imaginary", label: "虛數 (Imaginary)", note: "含有 √(-5) = √5 i，屬於虛數" }
+    ];
+
+    const STAGE_NAMES = {
+      rational: "有理數 (Rational Numbers)",
+      irrational: "無理數 (Irrational Numbers)",
+      real: "實數 (Real Numbers)",
+      imaginary: "虛數 (Imaginary Numbers)"
+    };
+
+    /* --- 音效系統 (Web Audio API) --- */
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playSound(type) {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      if (type === 'catch_good') {
+        osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
+        osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.15); // A5
+        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.15);
+      } else if (type === 'catch_bad') {
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(180, audioCtx.currentTime);
+        osc.frequency.linearRampToValueAtTime(95, audioCtx.currentTime + 0.35);
+        gain.gain.setValueAtTime(0.35, audioCtx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.35);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.35);
+      }
+    }
+
+    /* --- 畫布與遊戲狀態 --- */
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    let currentStage = "rational";
+    let speedSetting = "slow";
+    let score = 0;
+    let correctCount = 0;
+    let wrongCount = 0;
+    let timeLeft = 30;
+    let isGameOver = true;
+
+    // 玩家人物狀態
+    const player = {
+      x: 400,
+      y: 520,
+      width: 110,
+      height: 65,
+      speed: 9
+    };
+
+    // 凍結狀態 (接錯暫停移動 2 秒)
+    let frozenUntil = 0;
+    let feedbackEffects = []; // 畫面上漂浮的 +100 文字
+
+    // 蘋果陣列與生成計時
+    let apples = [];
+    let lastSpawnTime = 0;
+
+    const SPEED_CONFIG = {
+      slow: { fallSpeedMin: 1.5, fallSpeedMax: 2.3, spawnInterval: 1300 },
+      medium: { fallSpeedMin: 2.4, fallSpeedMax: 3.4, spawnInterval: 1000 },
+      fast: { fallSpeedMin: 3.5, fallSpeedMax: 4.8, spawnInterval: 800 }
+    };
+
+    // 鍵盤按鍵狀態
+    const keys = { left: false, right: false };
+
+    /* --- 判斷蘋果是否符合當前關卡要求 --- */
+    function isTargetMatch(item, stage) {
+      if (stage === "rational") return item.base === "rational";
+      if (stage === "irrational") return item.base === "irrational";
+      if (stage === "real") return item.base === "rational" || item.base === "irrational";
+      if (stage === "imaginary") return item.base === "imaginary";
+      return false;
+    }
+
+    /* --- 生成蘋果（確保約 45% 機率出現正確目標，避免學生等太久） --- */
+    function spawnApple() {
+      const wantTarget = Math.random() < 0.45;
+      const matchingPool = NUMBER_POOL.filter(item => isTargetMatch(item, currentStage) === wantTarget);
+      const chosen = matchingPool[Math.floor(Math.random() * matchingPool.length)];
+
+      const cfg = SPEED_CONFIG[speedSetting];
+      const radius = 36;
+      const x = Math.random() * (canvas.width - radius * 2 - 40) + radius + 20;
+      const vy = cfg.fallSpeedMin + Math.random() * (cfg.fallSpeedMax - cfg.fallSpeedMin);
+
+      apples.push({
+        x,
+        y: -radius,
+        radius,
+        vy,
+        data: chosen
+      });
+    }
+
+    /* --- 啟動遊戲 --- */
+    let timerInterval = null;
+    function startGame() {
+      currentStage = document.getElementById("stageSelect").value;
+      speedSetting = document.getElementById("speedSelect").value;
+
+      score = 0;
+      correctCount = 0;
+      wrongCount = 0;
+      timeLeft = 30;
+      apples = [];
+      feedbackEffects = [];
+      frozenUntil = 0;
+      isGameOver = false;
+      player.x = canvas.width / 2;
+
+      document.getElementById("freezeBanner").style.display = "none";
+      document.getElementById("startModal").style.display = "none";
+      document.getElementById("endModal").style.display = "none";
+      document.getElementById("missionText").innerText = `🎯 本關目標：請接住所有【${STAGE_NAMES[currentStage]}】！`;
+
+      updateHeaderUI();
+
+      if (timerInterval) clearInterval(timerInterval);
+      timerInterval = setInterval(() => {
+        if (!isGameOver) {
+          timeLeft--;
+          updateHeaderUI();
+          if (timeLeft <= 0) {
+            endGame();
+          }
+        }
+      }, 1000);
+
+      lastSpawnTime = performance.now();
+      spawnApple();
+      requestAnimationFrame(gameLoop);
+    }
+
+    function updateHeaderUI() {
+      document.getElementById("scoreVal").innerText = score;
+      document.getElementById("correctVal").innerText = correctCount;
+      document.getElementById("timeVal").innerText = `${timeLeft}s`;
+    }
+
+    function endGame() {
+      isGameOver = true;
+      if (timerInterval) clearInterval(timerInterval);
+      document.getElementById("freezeBanner").style.display = "none";
+
+      document.getElementById("resStage").innerText = STAGE_NAMES[currentStage];
+      document.getElementById("resScore").innerText = score;
+      document.getElementById("resCorrect").innerText = `${correctCount} 個`;
+      document.getElementById("resWrong").innerText = `${wrongCount} 次`;
+      document.getElementById("endModal").style.display = "flex";
+    }
+
+    /* --- 觸發接錯 2 秒凍結與提示 --- */
+    function triggerFreeze(appleData) {
+      const now = performance.now();
+      frozenUntil = now + 2000; // 凍結 2000 毫秒 (2 秒)
+
+      const banner = document.getElementById("freezeBanner");
+      const desc = document.getElementById("freezeDesc");
+      desc.innerHTML = `蘋果上的 <b>【 ${appleData.text} 】</b> 屬於 <b>${appleData.label}</b><br><span style="font-size:0.9rem; color:#fde047;">💡 ${appleData.note}</span>`;
+      banner.style.display = "block";
+    }
+
+    /* --- 主遊戲迴圈 --- */
+    function gameLoop(now) {
+      if (isGameOver) return;
+      requestAnimationFrame(gameLoop);
+
+      update(now);
+      draw(now);
+    }
+
+    function update(now) {
+      const isFrozen = now < frozenUntil;
+      if (!isFrozen) {
+        document.getElementById("freezeBanner").style.display = "none";
+        // 鍵盤移動
+        if (keys.left) player.x -= player.speed;
+        if (keys.right) player.x += player.speed;
+        // 邊界限制
+        const halfW = player.width / 2;
+        if (player.x < halfW) player.x = halfW;
+        if (player.x > canvas.width - halfW) player.x = canvas.width - halfW;
+      }
+
+      // 定時生成蘋果
+      const cfg = SPEED_CONFIG[speedSetting];
+      if (now - lastSpawnTime > cfg.spawnInterval) {
+        spawnApple();
+        lastSpawnTime = now;
+      }
+
+      // 更新蘋果位置與碰撞檢查
+      for (let i = apples.length - 1; i >= 0; i--) {
+        const a = apples[i];
+        a.y += a.vy;
+
+        // 檢查是否進入果籃範圍
+        const basketTop = player.y - 15;
+        const basketBottom = player.y + 35;
+        const basketLeft = player.x - player.width / 2 - 10;
+        const basketRight = player.x + player.width / 2 + 10;
+
+        if (
+          a.y + a.radius >= basketTop &&
+          a.y - a.radius <= basketBottom &&
+          a.x >= basketLeft &&
+          a.x <= basketRight
+        ) {
+          // 接到蘋果！判斷對錯
+          const correct = isTargetMatch(a.data, currentStage);
+          if (correct) {
+            playSound('catch_good');
+            score += 100;
+            correctCount++;
+            feedbackEffects.push({ x: player.x, y: player.y - 30, text: "+100 ✓", color: "#4ade80", alpha: 1 });
+          } else {
+            playSound('catch_bad');
+            score = Math.max(0, score - 30);
+            wrongCount++;
+            feedbackEffects.push({ x: player.x, y: player.y - 30, text: "❄️ 凍結 2 秒!", color: "#f87171", alpha: 1 });
+            triggerFreeze(a.data);
+          }
+          updateHeaderUI();
+          apples.splice(i, 1);
+          continue;
+        }
+
+        // 超出畫面底部移除
+        if (a.y - a.radius > canvas.height) {
+          apples.splice(i, 1);
+        }
+      }
+
+      // 更新漂浮特效文字
+      for (let i = feedbackEffects.length - 1; i >= 0; i--) {
+        feedbackEffects[i].y -= 1.2;
+        feedbackEffects[i].alpha -= 0.025;
+        if (feedbackEffects[i].alpha <= 0) feedbackEffects.splice(i, 1);
+      }
+    }
+
+    /* --- 繪製畫面 --- */
+    function draw(now) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // 1. 繪製落下的蘋果
+      apples.forEach(a => {
+        ctx.save();
+        // 蘋果果實 (圓潤紅色)
+        ctx.fillStyle = "#e11d48";
+        ctx.beginPath();
+        ctx.arc(a.x, a.y, a.radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = "#fda4af";
+        ctx.stroke();
+
+        // 蘋果蒂與綠葉
+        ctx.strokeStyle = "#78350f";
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.moveTo(a.x, a.y - a.radius + 3);
+        ctx.lineTo(a.x + 3, a.y - a.radius - 10);
+        ctx.stroke();
+
+        ctx.fillStyle = "#22c55e";
+        ctx.beginPath();
+        ctx.ellipse(a.x + 10, a.y - a.radius - 6, 9, 5, Math.PI / 6, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 蘋果上的數字
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "bold 20px 'Segoe UI', Consolas, sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(a.data.text, a.x, a.y + 2);
+        ctx.restore();
+      });
+
+      // 2. 繪製下方接果籃人物
+      const isFrozen = now < frozenUntil;
+      ctx.save();
+
+      // 人物頭部與身體
+      ctx.fillStyle = isFrozen ? "#38bdf8" : "#fbbf24";
+      ctx.beginPath();
+      ctx.arc(player.x, player.y - 36, 18, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 表情 (正常笑臉 vs 冰凍驚訝臉)
+      ctx.fillStyle = "#0f172a";
+      ctx.beginPath();
+      ctx.arc(player.x - 6, player.y - 39, 2.5, 0, Math.PI * 2);
+      ctx.arc(player.x + 6, player.y - 39, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      if (isFrozen) {
+        ctx.arc(player.x, player.y - 31, 4, 0, Math.PI * 2);
+        ctx.stroke();
+      } else {
+        ctx.arc(player.x, player.y - 33, 6, 0, Math.PI);
+        ctx.stroke();
+      }
+
+      // 繪製果籃
+      ctx.fillStyle = isFrozen ? "#0284c7" : "#d97706";
+      ctx.beginPath();
+      ctx.roundRect(player.x - player.width / 2, player.y - 18, player.width, 42, [4, 4, 18, 18]);
+      ctx.fill();
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = isFrozen ? "#bae6fd" : "#fef08a";
+      ctx.stroke();
+
+      // 果籃上的狀態文字
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "bold 14px sans-serif";
+      ctx.textAlign = "center";
+      if (isFrozen) {
+        const remainSec = ((frozenUntil - now) / 1000).toFixed(1);
+        ctx.fillText(`❄️ 凍結 ${remainSec}s`, player.x, player.y + 6);
+      } else {
+        ctx.fillText("🧺 左右滑動接果", player.x, player.y + 6);
+      }
+      ctx.restore();
+
+      // 3. 繪製漂浮加扣分文字
+      feedbackEffects.forEach(fx => {
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, fx.alpha);
+        ctx.fillStyle = fx.color;
+        ctx.font = "bold 22px sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText(fx.text, fx.x, fx.y);
+        ctx.restore();
+      });
+    }
+
+    /* --- iPad 觸控與滑鼠拖曳控制 (左右滑動) --- */
+    function handlePointerMove(clientX) {
+      if (isGameOver) return;
+      if (performance.now() < frozenUntil) return; // 凍結期間禁止滑動移動！
+
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      let targetX = (clientX - rect.left) * scaleX;
+
+      const halfW = player.width / 2;
+      if (targetX < halfW) targetX = halfW;
+      if (targetX > canvas.width - halfW) targetX = canvas.width - halfW;
+      player.x = targetX;
+    }
+
+    // 支援 iPad 手指直接滑動
+    canvas.addEventListener("touchstart", e => {
+      if (e.touches.length > 0) handlePointerMove(e.touches[0].clientX);
+    }, { passive: false });
+
+    canvas.addEventListener("touchmove", e => {
+      e.preventDefault(); // 防止 iPad 畫面被拉動
+      if (e.touches.length > 0) handlePointerMove(e.touches[0].clientX);
+    }, { passive: false });
+
+    // 支援電腦滑鼠移動
+    let isMouseDown = false;
+    canvas.addEventListener("mousedown", e => { isMouseDown = true; handlePointerMove(e.clientX); });
+    window.addEventListener("mousemove", e => { if (isMouseDown) handlePointerMove(e.clientX); });
+    window.addEventListener("mouseup", () => { isMouseDown = false; });
+
+    // 支援鍵盤左右方向鍵
+    window.addEventListener("keydown", e => {
+      if (e.key === "ArrowLeft" || e.key === "a" || e.key === "A") keys.left = true;
+      if (e.key === "ArrowRight" || e.key === "d" || e.key === "D") keys.right = true;
+    });
+    window.addEventListener("keyup", e => {
+      if (e.key === "ArrowLeft" || e.key === "a" || e.key === "A") keys.left = false;
+      if (e.key === "ArrowRight" || e.key === "d" || e.key === "D") keys.right = false;
+    });
+
+    document.getElementById("startBtn").onclick = startGame;
+    document.getElementById("restartBtn").onclick = () => {
+      document.getElementById("endModal").style.display = "none";
+      document.getElementById("startModal").style.display = "flex";
+    };
+  </script>
+</body>
+</html>
